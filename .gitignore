@@ -2,3 +2,4 @@ jobs/*
 !jobs/example/
 jobs/example/*
 !jobs/example/script.json
+.env

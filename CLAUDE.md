@@ -2,6 +2,7 @@
 
 You (Claude) are the editor. Flow per request:
 
+0. Keys live in `.env` (gitignored). Run every node command as `node --env-file=.env ...`.
 1. `node discord.js pull` → list of new requests (each has `dir`, `text`, `files`).
    Nothing new → stop.
 2. Get the source content:
