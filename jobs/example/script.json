@@ -1,0 +1,35 @@
+{
+  "voice": "bf322df2096a46f18c579d0baa36f41d",
+  "caption": "3 settings that fix your first layer 🔧 Save this for your next print.\n#3dprinting #3dprintingtips #bambulab #prusa #gija3d",
+  "scenes": [
+    {
+      "kind": "hook",
+      "title": "First layer won't stick?",
+      "say": "First layer won't stick? Change these three settings today."
+    },
+    {
+      "kind": "tip",
+      "title": "Z offset",
+      "sub": "−0.05 mm steps",
+      "say": "One. Lower your Z offset in five hundredths of a millimeter steps until the lines squish together."
+    },
+    {
+      "kind": "tip",
+      "title": "Slow start",
+      "sub": "20 mm/s first layer",
+      "say": "Two. Print the first layer slow, around twenty millimeters per second."
+    },
+    {
+      "kind": "tip",
+      "title": "Clean bed",
+      "sub": "IPA, not fingers",
+      "say": "Three. Wipe the bed with isopropyl alcohol. Finger oil is the number one enemy of adhesion."
+    },
+    {
+      "kind": "cta",
+      "title": "Save this",
+      "sub": "gija3d.lt",
+      "say": "Save this so you don't forget, and follow for more tips."
+    }
+  ]
+}
