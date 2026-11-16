@@ -5,7 +5,7 @@
 // Needs DISCORD_CHANNEL_ID. Token: injected by the session proxy for discord.com ("Bot" prefix),
 // or set DISCORD_TOKEN when running locally.
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
-const API = 'https://discord.com/api/v10', CH = process.env.DISCORD_CHANNEL_ID;
+const API = 'https://discord.com/api/v10', CH = process.env.DISCORD_CHANNEL_ID || '1571986287232286801'; // #reels-inbox
 const H = { Authorization: `Bot ${process.env.DISCORD_TOKEN || 'proxy'}` };
 const DONE = encodeURIComponent('✅');
 if (!CH) throw new Error('set DISCORD_CHANNEL_ID');

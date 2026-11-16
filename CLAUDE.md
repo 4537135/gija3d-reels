@@ -22,4 +22,4 @@ You (Claude) are the editor. Flow per request:
 4. `node render.js <dir>/script.json` → `<dir>/reel.mp4`. Grab 2 frames with ffmpeg and look at them.
 5. `node discord.js post <id> <dir>/reel.mp4 "<caption>"`.
 
-Env: `DISCORD_CHANNEL_ID` must be set. Fish + Discord keys come from the environment's network secrets.
+Channel: #reels-inbox (id in discord.js). Fish + Discord keys come from the environment's network secrets.
