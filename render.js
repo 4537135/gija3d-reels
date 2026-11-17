@@ -31,7 +31,11 @@ async function tts(text, out) {
   for (const [i, s] of job.scenes.entries()) {
     const f = path.join(dir, `vo_${i}.mp3`);
     if (noTts) execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', String(Math.max(1.5, s.say.split(/\s+/).length / 2.6)), f]);
-    else if (!fs.existsSync(f) || job.retts) await tts(s.say, f);
+    else {
+      const raw = path.join(dir, `vo_${i}_raw.mp3`);
+      if (!fs.existsSync(raw) || job.retts) await tts(s.say, raw);
+      execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-af', `atempo=${job.speed || 1.15}`, f]); // 15% faster by default
+    }
     s.dur = dur(f) + GAP;
     parts.push(f);
   }
@@ -46,7 +50,8 @@ async function tts(text, out) {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: W, height: H } });
   await page.goto('file://' + path.join(__dirname, 'template.html'));
-  const scenes = job.scenes.map(s => ({ ...s, image: s.image ? 'file://' + path.resolve(dir, s.image) : null }));
+  const scenes = job.scenes.map(s => ({ ...s, image: s.image ? 'file://' + path.resolve(dir, s.image) : null,
+    art: s.art ? fs.readFileSync(path.resolve(dir, s.art), 'utf8') : null }));
   await page.evaluate(d => window.load(d), { scenes, brand: job.brand || {} });
   await page.evaluate(() => document.fonts.ready);
   const fontsOk = await page.evaluate(() => document.fonts.check('800 40px Unbounded') && document.fonts.check('400 40px Manrope'));

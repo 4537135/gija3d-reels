@@ -18,6 +18,12 @@ You (Claude) are the editor. Flow per request:
    - 1 hook (kind "hook", ≤ 2 s of speech, a problem or surprising claim), 2–5 tips (kind "tip"),
      1 CTA (kind "cta"). Total 20–40 s. `title` ≤ 4 words.
    - Optional `"image": "../../assets/<file>.jpg"` per scene — only real gija3d photos from `assets/`.
+   - EVERY scene gets its own animated illustration: write `<dir>/artN.svg` and set `"art": "artN.svg"`.
+     SVG, viewBox `0 0 920 620`, CSS keyframe animations in a `<style>` inside it (the renderer seeks them
+     frame by frame; `var(--d)` = scene seconds). Show the actual mechanism of the tip (nozzle, layers,
+     slicer toggle, before/after), not decoration. Colours: `var(--accent)`, `var(--ink)`, `var(--muted)`,
+     greys. See `art-examples/` (ironing reel) for the style. Check frames after rendering and fix overlaps.
+   - Voice is sped up 15% by default (`"speed": 1.15` in script.json to change).
    - `caption`: 1–2 lines + 3–5 hashtags.
    - `voice`: Fish Audio voice id from `voice.txt`. TTS model defaults to `s2.1-pro-free`.
 4. `node render.js <dir>/script.json` → `<dir>/reel.mp4`. Grab 2 frames with ffmpeg and look at them.

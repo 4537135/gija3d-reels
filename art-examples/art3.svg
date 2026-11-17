@@ -1,0 +1,9 @@
+<svg viewBox="0 0 920 620" xmlns="http://www.w3.org/2000/svg" font-family="Unbounded"><style>.r{stroke:#141414;stroke-width:9;stroke-linecap:round} .lbl{font-weight:200;font-size:30px;fill:var(--muted);letter-spacing:.08em} .big{font-weight:800;fill:var(--accent)}.l{animation:drop .45s cubic-bezier(.2,.8,.2,1) both}
+.top{animation:fade .4s 1.5s both} .tg{animation:fade .3s 1.3s both}
+.kn{animation:flip .3s 1.3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes drop{from{transform:translateY(-70px);opacity:0}} @keyframes fade{from{opacity:0}}
+@keyframes flip{to{transform:translateX(100px)}}</style><rect class="l" x="60" y="470" width="520" height="48" rx="24" fill="#3a3a37" style="animation-delay:0.10s"/><rect class="l" x="60" y="408" width="520" height="48" rx="24" fill="#3a3a37" style="animation-delay:0.22s"/><rect class="l" x="60" y="346" width="520" height="48" rx="24" fill="#3a3a37" style="animation-delay:0.34s"/><rect class="l" x="60" y="284" width="520" height="48" rx="24" fill="#3a3a37" style="animation-delay:0.46s"/><rect class="l" x="60" y="222" width="520" height="48" rx="24" fill="#3a3a37" style="animation-delay:0.58s"/><rect class="l" x="60" y="160" width="520" height="48" rx="24" fill="#3a3a37" style="animation-delay:0.70s"/><rect class="top" x="60" y="98" width="520" height="48" rx="24" fill="var(--accent)"/>
+<line class="top" x1="600" y1="122" x2="680" y2="122" stroke="var(--accent)" stroke-width="4"/>
+<text class="top lbl" x="696" y="112" style="fill:var(--accent)">TOPMOST</text><text class="top lbl" x="696" y="150" style="fill:var(--accent)">ONLY</text>
+<rect x="680" y="380" width="200" height="100" rx="50" fill="#3a3a37"/><rect class="tg" x="680" y="380" width="200" height="100" rx="50" fill="var(--accent)"/>
+<circle class="kn" cx="730" cy="430" r="38" fill="var(--ink)"/><text x="680" y="540" class="lbl">IRONING</text></svg>

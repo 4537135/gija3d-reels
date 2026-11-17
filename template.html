@@ -17,13 +17,19 @@ body { width:1080px; height:1920px; overflow:hidden; background:var(--bg); color
 #title { font:800 118px/1.02 Unbounded; text-transform:uppercase; }
 #title .w { display:inline-block; }
 #sub { font:200 52px/1.25 Unbounded; color:var(--muted); }
-#cap { position:absolute; left:70px; right:70px; bottom:260px; font:700 58px/1.25 Manrope; text-align:center; }
+#art { position:absolute; left:80px; top:800px; width:920px; height:620px; }
+#art svg { width:100%; height:100%; overflow:visible; }
+body.hasart #block { top:230px; gap:22px; }
+body.hasart #count { font-size:110px; }
+body.hasart #title { font-size:96px; }
+body.hasart #sub { font-size:44px; }
+#cap { position:absolute; left:70px; right:70px; bottom:260px; font:700 54px/1.25 Manrope; text-align:center; }
 #cap span { opacity:.28; } #cap span.on { opacity:1; } #cap span.now { color:var(--accent); }
 #layers { position:absolute; left:80px; bottom:150px; height:10px; background:var(--accent); }
 </style></head><body>
 <div id="bed"></div><div id="img"></div>
 <div id="brand">GIJA<b>3D</b></div>
-<div id="block"><div id="count"></div><div id="title"></div><div id="sub"></div></div><div id="cap"></div><div id="layers"></div>
+<div id="block"><div id="count"></div><div id="title"></div><div id="sub"></div></div><div id="art"></div><div id="cap"></div><div id="layers"></div>
 <script>
 let S = [], starts = [], total = 0, cur = -1;
 const $ = id => document.getElementById(id);
@@ -39,7 +45,10 @@ function build(i) {
   $('sub').textContent = s.sub || '';
   $('cap').innerHTML = s.say.split(/\s+/).map(w => `<span>${w}</span>`).join(' ');
   $('img').style.backgroundImage = s.image ? `url("${s.image}")` : 'none';
-  $('block').style.top = s.image ? '980px' : '520px';
+  $('block').style.top = s.image ? '980px' : '';
+  // Per-scene art: SVG/HTML with CSS animations; --d = scene seconds so art can scale its timing.
+  $('art').innerHTML = s.art || ''; $('art').style.setProperty('--d', s.dur + 's');
+  document.body.classList.toggle('hasart', !!s.art);
   $('count').textContent = s.kind === 'tip' ? String(S.slice(0, i + 1).filter(x => x.kind === 'tip').length).padStart(2, '0') : '';
 }
 // Deterministic: everything is a pure function of t, so every render is identical.
@@ -58,6 +67,8 @@ window.seek = t => {
   const ws = [...document.querySelectorAll('#cap span')], chars = ws.reduce((a, w) => a + w.textContent.length + 1, 0);
   let acc = 0; const spoken = (lt / Math.max(d - 0.25, 0.1)) * chars;
   ws.forEach(w => { const a = acc; acc += w.textContent.length + 1; w.className = spoken >= acc ? 'on' : spoken >= a ? 'on now' : ''; });
+  // Drive the art's CSS animations by hand so each frame is exact.
+  $('art').getAnimations({ subtree: true }).forEach(an => { an.pause(); an.currentTime = lt * 1000; });
   $('layers').style.width = (920 * t / total) + 'px'; // progress bar = "layers printed"
 };
 </script></body></html>

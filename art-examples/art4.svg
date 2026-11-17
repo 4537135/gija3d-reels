@@ -1,0 +1,5 @@
+<svg viewBox="0 0 920 620" xmlns="http://www.w3.org/2000/svg" font-family="Unbounded"><style>.bm{stroke-dasharray:1100;animation:bd .8s .1s ease-out both, bf .4s .8s both}
+.ring{transform-origin:460px 300px;animation:rg 1.4s .9s ease-out infinite}
+@keyframes bd{from{stroke-dashoffset:1100}to{stroke-dashoffset:0}} @keyframes bf{from{fill-opacity:0}to{fill-opacity:1}}
+@keyframes rg{from{transform:scale(.7);opacity:.9}to{transform:scale(1.35);opacity:0}}</style><circle class="ring" cx="460" cy="300" r="200" fill="none" stroke="var(--accent)" stroke-width="4"/>
+<path class="bm" d="M360 150 h200 v310 l-100 -80 l-100 80 z" fill="var(--accent)" stroke="var(--accent)" stroke-width="10" stroke-linejoin="round"/></svg>

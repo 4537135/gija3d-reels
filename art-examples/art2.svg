@@ -1,0 +1,9 @@
+<svg viewBox="0 0 920 620" xmlns="http://www.w3.org/2000/svg" font-family="Unbounded"><style>.r{stroke:#141414;stroke-width:9;stroke-linecap:round} .lbl{font-weight:200;font-size:30px;fill:var(--muted);letter-spacing:.08em} .big{font-weight:800;fill:var(--accent)}.b1{transform-origin:0 0;animation:g1 .7s .2s cubic-bezier(.2,.8,.2,1) both}
+.b2{transform-origin:0 0;animation:g2 .9s 1s cubic-bezier(.2,.8,.2,1) both}
+.n{animation:pop .5s 1.5s cubic-bezier(.2,1.4,.4,1) both;transform-origin:460px 520px}
+@keyframes g1{from{transform:scaleX(0)}} @keyframes g2{from{transform:scaleX(0)}to{transform:scaleX(.15)}}
+@keyframes pop{from{transform:scale(.6);opacity:0}}</style><text x="0" y="60" class="lbl">NORMAL LAYER</text><text x="920" y="60" class="lbl" text-anchor="end">100%</text>
+<rect x="0" y="85" width="920" height="70" rx="6" fill="#3a3a37"/><rect class="b1" x="0" y="85" width="920" height="70" rx="6" fill="var(--ink)"/>
+<text x="0" y="255" class="lbl" style="fill:var(--accent)">IRONING PASS</text>
+<rect x="0" y="280" width="920" height="70" rx="6" fill="#3a3a37"/><rect class="b2" x="0" y="280" width="920" height="70" rx="6" fill="var(--accent)"/>
+<text x="0" y="560" class="big n" font-size="140">10–15%</text></svg>
