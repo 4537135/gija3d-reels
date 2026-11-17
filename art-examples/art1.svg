@@ -1,32 +1,10 @@
-<svg viewBox="0 0 920 620" xmlns="http://www.w3.org/2000/svg" font-family="Unbounded"><style>.r{stroke:#2a2a28;stroke-width:9;stroke-linecap:round} .lbl{font-weight:200;font-size:30px;fill:var(--muted);letter-spacing:.08em} .big{font-weight:800;fill:var(--accent)}.r{animation:gone .25s linear both}
-.noz{animation:sweep calc(var(--d) - 1.4s) .4s linear both}
+<svg viewBox="0 0 920 620" xmlns="http://www.w3.org/2000/svg" font-family="Unbounded"><style>.r{stroke:#2a2a28;stroke-width:16;stroke-linecap:round} .lbl{font-weight:200;font-size:30px;fill:var(--muted);letter-spacing:.08em}.noz{animation:zig calc(var(--d) - 1.4s) .4s linear both}
 .gloss{animation:shine .6s calc(var(--d) - .9s) both}
-.glow{animation:pulse .5s infinite alternate}
-@keyframes gone{to{opacity:0}}
-@keyframes sweep{from{transform:translate(250px,298px)}to{transform:translate(710px,218px)}}
-@keyframes shine{to{opacity:.4}} @keyframes pulse{to{r:14}}</style><polygon points="160,200 340,300 340,440 160,340" fill="#4a4944"/>
+@keyframes eA{to{stroke-dashoffset:-206}} @keyframes eB{to{stroke-dashoffset:206}}
+@keyframes shine{to{opacity:.4}}
+@keyframes zig{0.00%{transform:translate(201.8px,240.7px)}8.50%{transform:translate(381.8px,340.7px)}10.00%{transform:translate(423.6px,333.5px)}18.50%{transform:translate(243.6px,233.5px)}20.00%{transform:translate(285.5px,226.2px)}28.50%{transform:translate(465.5px,326.2px)}30.00%{transform:translate(507.3px,318.9px)}38.50%{transform:translate(327.3px,218.9px)}40.00%{transform:translate(369.1px,211.6px)}48.50%{transform:translate(549.1px,311.6px)}50.00%{transform:translate(590.9px,304.4px)}58.50%{transform:translate(410.9px,204.4px)}60.00%{transform:translate(452.7px,197.1px)}68.50%{transform:translate(632.7px,297.1px)}70.00%{transform:translate(674.5px,289.8px)}78.50%{transform:translate(494.5px,189.8px)}80.00%{transform:translate(536.4px,182.5px)}88.50%{transform:translate(716.4px,282.5px)}90.00%{transform:translate(758.2px,275.3px)}98.50%{transform:translate(578.2px,175.3px)}100%{transform:translate(578.2px,175.3px)}}</style><polygon points="160,200 340,300 340,440 160,340" fill="#4a4944"/>
 <polygon points="340,300 800,220 800,360 340,440" fill="#33322f"/>
-<polygon points="160,200 620,120 800,220 340,300" fill="#77746c"/><line class="r" x1="180.9" y1="196.4" x2="360.9" y2="296.4" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.045)"/>
-<line class="r" x1="201.8" y1="192.7" x2="381.8" y2="292.7" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.091)"/>
-<line class="r" x1="222.7" y1="189.1" x2="402.7" y2="289.1" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.136)"/>
-<line class="r" x1="243.6" y1="185.5" x2="423.6" y2="285.5" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.182)"/>
-<line class="r" x1="264.5" y1="181.8" x2="444.5" y2="281.8" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.227)"/>
-<line class="r" x1="285.5" y1="178.2" x2="465.5" y2="278.2" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.273)"/>
-<line class="r" x1="306.4" y1="174.5" x2="486.4" y2="274.5" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.318)"/>
-<line class="r" x1="327.3" y1="170.9" x2="507.3" y2="270.9" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.364)"/>
-<line class="r" x1="348.2" y1="167.3" x2="528.2" y2="267.3" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.409)"/>
-<line class="r" x1="369.1" y1="163.6" x2="549.1" y2="263.6" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.455)"/>
-<line class="r" x1="390.0" y1="160.0" x2="570.0" y2="260.0" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.500)"/>
-<line class="r" x1="410.9" y1="156.4" x2="590.9" y2="256.4" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.545)"/>
-<line class="r" x1="431.8" y1="152.7" x2="611.8" y2="252.7" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.591)"/>
-<line class="r" x1="452.7" y1="149.1" x2="632.7" y2="249.1" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.636)"/>
-<line class="r" x1="473.6" y1="145.5" x2="653.6" y2="245.5" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.682)"/>
-<line class="r" x1="494.5" y1="141.8" x2="674.5" y2="241.8" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.727)"/>
-<line class="r" x1="515.5" y1="138.2" x2="695.5" y2="238.2" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.773)"/>
-<line class="r" x1="536.4" y1="134.5" x2="716.4" y2="234.5" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.818)"/>
-<line class="r" x1="557.3" y1="130.9" x2="737.3" y2="230.9" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.864)"/>
-<line class="r" x1="578.2" y1="127.3" x2="758.2" y2="227.3" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.909)"/>
-<line class="r" x1="599.1" y1="123.6" x2="779.1" y2="223.6" style="animation-delay:calc(.4s + (var(--d) - 1.4s) * 0.955)"/>
-<polygon class="gloss" points="330,215 420,199 600,299 510,315" fill="#fff" opacity=".0"/>
+<polygon points="160,200 620,120 800,220 340,300" fill="#77746c"/><line class="r" x1="201.8" y1="192.7" x2="381.8" y2="292.7" style="stroke-dasharray:206;animation:eA calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.0000) linear both"/><line class="r" x1="243.6" y1="185.5" x2="423.6" y2="285.5" style="stroke-dasharray:206;animation:eB calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.1000) linear both"/><line class="r" x1="285.5" y1="178.2" x2="465.5" y2="278.2" style="stroke-dasharray:206;animation:eA calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.2000) linear both"/><line class="r" x1="327.3" y1="170.9" x2="507.3" y2="270.9" style="stroke-dasharray:206;animation:eB calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.3000) linear both"/><line class="r" x1="369.1" y1="163.6" x2="549.1" y2="263.6" style="stroke-dasharray:206;animation:eA calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.4000) linear both"/><line class="r" x1="410.9" y1="156.4" x2="590.9" y2="256.4" style="stroke-dasharray:206;animation:eB calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.5000) linear both"/><line class="r" x1="452.7" y1="149.1" x2="632.7" y2="249.1" style="stroke-dasharray:206;animation:eA calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.6000) linear both"/><line class="r" x1="494.5" y1="141.8" x2="674.5" y2="241.8" style="stroke-dasharray:206;animation:eB calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.7000) linear both"/><line class="r" x1="536.4" y1="134.5" x2="716.4" y2="234.5" style="stroke-dasharray:206;animation:eA calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.8000) linear both"/><line class="r" x1="578.2" y1="127.3" x2="758.2" y2="227.3" style="stroke-dasharray:206;animation:eB calc((var(--d) - 1.4s) * 0.0850) calc(.4s + (var(--d) - 1.4s) * 0.9000) linear both"/>
+<polygon class="gloss" points="330,215 420,199 600,299 510,315" fill="#fff" opacity="0"/>
 <g class="noz"><rect x="-46" y="-190" width="92" height="90" rx="8" fill="#8A8780"/><rect x="-18" y="-250" width="36" height="64" fill="#5a5955"/>
-<polygon points="-34,-100 34,-100 8,-52 -8,-52" fill="#c9a23a"/><circle cx="0" cy="-48" r="9" fill="var(--accent)" class="glow"/></g></svg>
+<polygon points="-34,-100 34,-100 8,-52 -8,-52" fill="#c9a23a"/><circle cx="0" cy="-48" r="9" fill="var(--accent)"/></g></svg>
