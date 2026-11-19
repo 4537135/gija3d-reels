@@ -1,0 +1,87 @@
+=====================================================
+  REELS BOT - EASY SETUP (about 5 minutes)
+=====================================================
+
+You only need 2 keys. Claude is FREE here (it uses your
+Claude subscription, already logged in on this PC).
+
+
+-----------------------------------------------------
+ STEP 1 - Get your Fish Audio key
+-----------------------------------------------------
+ 1. Open:  https://fish.audio/app/api-keys
+ 2. Log in, click "Create" (or "New API key").
+ 3. Copy the key.
+
+
+-----------------------------------------------------
+ STEP 2 - Get your Discord bot token
+-----------------------------------------------------
+ 1. Open:  https://discord.com/developers/applications
+ 2. Click your bot app (or "New Application" to make one).
+ 3. Click "Bot" on the left.
+ 4. Click "Reset Token" -> "Yes, do it!" -> "Copy".
+ 5. SAME PAGE, scroll down: turn ON "Message Content Intent"
+    and click "Save Changes".   <-- don't skip this!
+
+ Bot not in your server yet?
+ 6. Click "OAuth2" on the left -> "URL Generator".
+ 7. Tick "bot". Then tick: View Channels, Send Messages,
+    Attach Files, Add Reactions, Read Message History.
+ 8. Copy the link at the bottom, open it, pick your server.
+
+
+-----------------------------------------------------
+ STEP 3 - Paste the keys
+-----------------------------------------------------
+ 1. In PowerShell, run:
+
+      cd "C:\Users\straz\Documents\Lost_Astronaut\faceless videos\gija3d-reels"
+      notepad .env
+
+ 2. Paste each key right after the = sign, like this:
+
+      FISH_API_KEY=abc123yourfishkey
+      DISCORD_TOKEN=MTQyyourdiscordtoken
+
+    (no spaces, no quotes)
+
+ 3. Press Ctrl+S to save, close Notepad.
+
+ NEVER send these keys to anyone or post them in Discord.
+
+
+-----------------------------------------------------
+ STEP 4 - Start the bot
+-----------------------------------------------------
+ In the same PowerShell window:
+
+      npm.cmd start
+
+ You should see:  "bot running, model claude-fable-5-2 ..."
+ Keep the window open. Ctrl+C stops it.
+
+
+-----------------------------------------------------
+ STEP 5 - Use it
+-----------------------------------------------------
+ Paste a TikTok or Instagram link in your Discord channel.
+
+   hourglass  = working (takes a few minutes)
+   check mark = done, the video + caption are in the reply
+   X          = failed, the bot replies with the reason
+
+ Full-quality videos are also saved in the "out" folder.
+
+
+-----------------------------------------------------
+ PROBLEMS?
+-----------------------------------------------------
+ "running scripts is disabled"  -> type npm.cmd, not npm
+ "DISCORD_TOKEN is not set"     -> you didn't save .env (Ctrl+S)
+ Discord 401 error              -> wrong token, do Step 2 again
+ Discord 403 error              -> bot can't see the channel,
+                                   check Step 2 parts 5-8
+ Instagram link fails           -> upload the video file instead,
+                                   or see the optional line in .env
+ Anything else                  -> copy the error and ask Claude

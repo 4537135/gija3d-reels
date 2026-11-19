@@ -1,6 +1,6 @@
 {
   "voice": "bf322df2096a46f18c579d0baa36f41d",
-  "caption": "3 settings that fix your first layer 🔧 Save this for your next print.\n#3dprinting #3dprintingtips #bambulab #prusa #gija3d",
+  "caption": "3 settings that fix your first layer 🔧 Save this for your next print.\n#3dprinting #3dprintingtips #bambulab #prusa",
   "scenes": [
     {
       "kind": "hook",
@@ -28,7 +28,6 @@
     {
       "kind": "cta",
       "title": "Save this",
-      "sub": "gija3d.lt",
       "say": "Save this so you don't forget, and follow for more tips."
     }
   ]

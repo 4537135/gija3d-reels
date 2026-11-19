@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path'), { execFile } = require('child_
 
 const MODEL = process.env.CLAUDE_MODEL || 'claude-fable-5-2';
 const EFFORT = process.env.CLAUDE_EFFORT || 'high';
-const NICHE = process.env.CHANNEL_NICHE || '3D printing tips for hobbyists. Brand: GIJA3D (gija3d.lt).';
+const NICHE = process.env.CHANNEL_NICHE || '3D printing tips for hobbyists.';
 const CLAUDE = process.env.CLAUDE_BIN || 'claude';
 
 const example = fs.readFileSync(path.join(__dirname, 'jobs/example/script.json'), 'utf8');
@@ -30,7 +30,9 @@ Script rules:
   then 2-5 scenes of kind "tip", then exactly 1 scene of kind "cta" last. Total speech 20-40 seconds
   (roughly 55-110 words overall, the voice is sped up 15%).
 - "title": max 4 words. "sub": optional short detail line (max ~5 words), e.g. a setting or value.
-- "caption": 1-2 lines for the post, then 3-5 relevant hashtags on a new line.
+- The "cta" scene is a plain call to action (save / follow). No brand name, website, handle or logo anywhere in it:
+  not in "title", "sub", "say" or the art. Leave its "sub" empty unless it adds something useful.
+- "caption": 1-2 lines for the post, then 3-5 relevant hashtags on a new line. No brand hashtags.
 
 Illustration rules (one per scene, the "art" field = a complete SVG string):
 - <svg viewBox="0 0 920 620" xmlns="http://www.w3.org/2000/svg"> with a <style> inside holding CSS @keyframes animations.
@@ -125,6 +127,10 @@ async function writeScript({ dir, transcript, info = {}, frames = [], note = '' 
   if (lastErr) throw lastErr;
 
   const voice = process.env.FISH_VOICE_ID || fs.readFileSync(path.join(__dirname, 'voice.txt'), 'utf8').trim();
+  // Belt and braces: no brand at the end of the reel or in the hashtags, even if the model adds one.
+  const BRAND = /gija\s*3d/i;
+  j.caption = j.caption.replace(/[ \t]*#gija3d\b/gi, '');
+  for (const s of j.scenes) if (s.kind === 'cta' && BRAND.test(s.sub || '')) s.sub = '';
   const script = { voice, caption: j.caption, source_summary: j.source_summary || '', scenes: [] };
   j.scenes.forEach((s, i) => {
     const art = `art${i}.svg`;
