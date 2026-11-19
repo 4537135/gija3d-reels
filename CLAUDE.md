@@ -1,12 +1,12 @@
 # gija3d-reels — faceless reels from TikTok / Instagram links
 
 The pipeline is automatic now: `npm start` runs `bot.js`, which polls #reels-inbox, downloads each link
-(yt-dlp), transcribes (Fish ASR), asks Claude (`writer.js`, default `claude-fable-5-2`) for the rewritten
+(yt-dlp), transcribes (Fish ASR), asks Claude (`writer.js` runs `claude -p` on the user's claude.ai subscription, default `claude-fable-5-2`; never switch it to a paid API key) for the rewritten
 script + one animated SVG per scene, renders (`render.js`, Fish TTS + Playwright) and replies with the reel.
 See README.md for setup. Keys live in `.env` (gitignored); run node with `--env-file=.env`.
 
 When asked to improve reel quality, the place to change is the `SYSTEM` prompt in `writer.js`
-(script and illustration rules) and `template.html` (layout). Keep `writer.js`'s JSON contract
+(script and illustration rules) and `template.html` (layout). Art SVGs render inside a shadow root, so their CSS can't leak. Keep `writer.js`'s JSON contract
 (`caption`, `scenes[{kind,title,sub,say,art}]`) in sync with `render.js`.
 
 ## Manual fix-up of one reel

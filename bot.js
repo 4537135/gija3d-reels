@@ -125,7 +125,7 @@ async function tick(first) {
 
 async function main() {
   const args = process.argv.slice(2);
-  for (const k of ['ANTHROPIC_API_KEY', 'FISH_API_KEY']) if (!process.env[k]) console.warn(`warning: ${k} is not set (.env)`);
+  for (const k of ['FISH_API_KEY']) if (!process.env[k]) console.warn(`warning: ${k} is not set (.env)`);
 
   const ui = args.indexOf('--url');
   if (ui >= 0) { // local test: one link -> out/, no Discord

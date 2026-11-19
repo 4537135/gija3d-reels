@@ -1,12 +1,13 @@
 // Claude writes the reel: rewritten script + one animated SVG per scene -> script.json + artN.svg
 //   const { writeScript } = require('./writer'); await writeScript({ dir, transcript, info, frames, note })
-const fs = require('fs'), path = require('path');
-const Anthropic = require('@anthropic-ai/sdk').default || require('@anthropic-ai/sdk');
+// Runs through the Claude Code CLI in headless mode (`claude -p`) on your claude.ai subscription,
+// so there is no per-call API bill. Log in once with `claude` (then /login) on this PC.
+const fs = require('fs'), path = require('path'), { execFile } = require('child_process');
 
 const MODEL = process.env.CLAUDE_MODEL || 'claude-fable-5-2';
 const EFFORT = process.env.CLAUDE_EFFORT || 'high';
 const NICHE = process.env.CHANNEL_NICHE || '3D printing tips for hobbyists. Brand: GIJA3D (gija3d.lt).';
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY
+const CLAUDE = process.env.CLAUDE_BIN || 'claude';
 
 const example = fs.readFileSync(path.join(__dirname, 'jobs/example/script.json'), 'utf8');
 const artExamples = ['art0.svg', 'art1.svg', 'art4.svg']
@@ -78,43 +79,48 @@ const cleanSvg = svg => svg
   .replace(/<(animate|animateTransform|animateMotion|set)\b[^>]*\/?>/gi, '')
   .replace(/(href|xlink:href)="(?!#)[^"]*"/gi, '');
 
-async function askClaude(content) {
-  const stream = client.beta.messages.stream({
-    model: MODEL,
-    max_tokens: 64000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default', // if the model declines, the API retries on a fallback model in the same call
-    output_config: { effort: EFFORT },
-    cache_control: { type: 'ephemeral' },
-    system: SYSTEM,
-    messages: [{ role: 'user', content }],
+// Headless Claude Code: only the Read tool (to look at the frames), working dir = the job folder.
+// API-key env vars are removed so it always uses the claude.ai subscription login, never a paid key.
+function askClaude(dir, prompt) {
+  dir = path.resolve(dir);
+  const sysFile = path.join(dir, 'writer_system.txt');
+  fs.writeFileSync(sysFile, SYSTEM);
+  const env = { ...process.env };
+  delete env.ANTHROPIC_API_KEY; delete env.ANTHROPIC_AUTH_TOKEN;
+  const args = ['-p', '--model', MODEL, '--effort', EFFORT, '--tools', 'Read', '--allowedTools', 'Read',
+    '--no-session-persistence', '--output-format', 'json', '--system-prompt-file', sysFile];
+  return new Promise((res, rej) => {
+    const p = execFile(CLAUDE, args, { cwd: dir, env, timeout: 20 * 60 * 1000, maxBuffer: 1 << 26, windowsHide: true }, (err, stdout, stderr) => {
+      let j;
+      try { j = JSON.parse(stdout); } catch {
+        const why = (stderr || err?.message || stdout || '').toString().trim().slice(-400);
+        return rej(new Error(err?.code === 'ENOENT' ? 'Claude Code CLI not found - install it and log in (see README)' : `claude -p failed: ${why}`));
+      }
+      if (j.is_error) return rej(new Error(`claude -p: ${String(j.result || j.subtype).slice(0, 300)}`));
+      const u = j.usage || {};
+      console.log(`  claude (${MODEL}, subscription): ${u.output_tokens} tokens out, ${Math.round((j.duration_ms || 0) / 1000)}s`);
+      res(String(j.result || ''));
+    });
+    p.stdin.end(prompt);
   });
-  const msg = await stream.finalMessage();
-  if (msg.stop_reason === 'refusal') throw new Error(`Claude declined this source (${msg.stop_details?.category || 'policy'})`);
-  if (msg.stop_reason === 'max_tokens') throw new Error('Claude reply was cut off (max_tokens)');
-  const text = msg.content.filter(b => b.type === 'text').map(b => b.text).join('');
-  const u = msg.usage || {};
-  console.log(`  claude: ${u.input_tokens} in (+${u.cache_read_input_tokens || 0} cached), ${u.output_tokens} out`);
-  return text;
 }
 
 async function writeScript({ dir, transcript, info = {}, frames = [], note = '' }) {
-  const content = [];
-  for (const f of frames) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: fs.readFileSync(f).toString('base64') } });
-  content.push({ type: 'text', text: [
-    frames.length ? `Above: ${frames.length} frames from the source video, in order.` : 'No frames available.',
+  const content = [{ type: 'text', text: [
+    frames.length ? `First use the Read tool to look at these ${frames.length} frames from the source video, in order: ${frames.map(f => path.basename(f)).join(', ')}.` : 'No frames available.',
     info.platform ? `Platform: ${info.platform}` : '',
     info.title ? `Source title: ${info.title}` : '',
     info.description ? `Source caption/description:\n${info.description}` : '',
     `Source transcript:\n${transcript || '(no speech detected - rely on the frames and caption)'}`,
     note ? `Extra instructions from the person who sent this:\n${note}` : '',
-    'Write the reel now. Reply with the JSON object only.',
-  ].filter(Boolean).join('\n\n') });
+    'Write the reel now. Your final reply must be the JSON object only.',
+  ].filter(Boolean).join('\n\n') }];
+  const prompt = content[0].text;
 
   let j, lastErr;
   for (let attempt = 0; attempt < 2; attempt++) {
-    try { j = extractJson(await askClaude(content)); validate(j); lastErr = null; break; }
-    catch (e) { lastErr = e; if (/declined/.test(e.message)) break; console.log(`  writer attempt ${attempt + 1} failed: ${e.message}`); }
+    try { j = extractJson(await askClaude(dir, prompt)); validate(j); lastErr = null; break; }
+    catch (e) { lastErr = e; if (/not found|usage limit|rate limit|login/i.test(e.message)) break; console.log(`  writer attempt ${attempt + 1} failed: ${e.message}`); }
   }
   if (lastErr) throw lastErr;
 

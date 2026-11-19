@@ -4,7 +4,7 @@ Paste a TikTok or Instagram link into `#reels-inbox` on Discord. The bot replies
 (1080×1920 H.264/AAC, ready for TikTok and Instagram) and a caption.
 
 ```
-link ──► yt-dlp ──► Fish ASR transcript + 6 frames ──► Claude Fable 5.2 rewrites the script
+link ──► yt-dlp ──► Fish ASR transcript + 6 frames ──► Claude Fable 5.2 (your subscription) rewrites the script
      ──► one animated SVG per scene ──► Fish TTS voice ──► Playwright render ──► Discord reply
 ```
 
@@ -16,18 +16,21 @@ Any other text in the message is passed to Claude as instructions, e.g.
 ## Setup (Windows)
 
 1. Install [Node.js 20.6+](https://nodejs.org).
-2. In this folder:
+2. Install [Claude Code](https://claude.com/claude-code) and log in once with your claude.ai account:
+   run `claude` in a terminal, finish the login, then type `/exit`. The bot uses it in headless mode
+   (`claude -p`), so script writing runs on your subscription. No Anthropic API key, no per-reel cost.
+3. In this folder (use `npm.cmd` if PowerShell says running scripts is disabled):
    ```powershell
-   npm install
+   npm.cmd install
    copy .env.example .env
    ```
    `npm install` also downloads ffmpeg, ffprobe, yt-dlp and Chromium, so nothing else needs installing.
-3. Fill in `.env`: `ANTHROPIC_API_KEY`, `FISH_API_KEY`, `DISCORD_TOKEN`.
+   Fill in `.env`: `FISH_API_KEY` and `DISCORD_TOKEN`.
 4. Discord Developer Portal → your app → **Bot** → enable **Message Content Intent**.
    The bot needs View Channel, Send Messages, Attach Files, Add Reactions and Read Message History in `#reels-inbox`.
 5. Run it:
    ```powershell
-   npm start
+   npm.cmd start
    ```
    Leave the window open. Stop with Ctrl+C. Jobs that were ⏳ when it stopped are retried on the next start.
 
@@ -53,8 +56,11 @@ If TikTok/IG downloads start failing for everyone, update yt-dlp: `npm update yo
 
 ## Cost
 
-Per reel roughly: Claude Fable 5.2 ≈ $0.30–0.80 (most of it is the SVG animations), Fish Audio TTS + ASR a few cents.
-Set `CLAUDE_MODEL=claude-opus-5-5` in `.env` for about half the Claude cost.
+- Script writing: free with your Claude plan. Each reel takes about a minute of Fable 5.2 and counts toward your
+  plan's usage limits. If you hit the limit, the bot replies with the error; try again after the reset, or set
+  `CLAUDE_EFFORT=medium` to use less.
+- Fish Audio: TTS + transcription, the only paid service.
+- Everything else (yt-dlp, ffmpeg, Playwright, Discord) is free.
 
 ## Files
 
@@ -63,7 +69,7 @@ Set `CLAUDE_MODEL=claude-opus-5-5` in `.env` for about half the Claude cost.
 | `bot.js` | the loop: Discord → download → transcribe → write → render → reply |
 | `download.js` | yt-dlp wrapper (TikTok, Instagram, Shorts, …) |
 | `transcribe.js` | Fish Audio speech-to-text |
-| `writer.js` | Claude prompt: rewritten script + animated SVG per scene |
+| `writer.js` | Claude prompt (run via `claude -p`): rewritten script + animated SVG per scene |
 | `render.js` | Fish TTS + frame-by-frame Playwright render → `reel.mp4` |
 | `template.html` | the visual design of the reel |
 | `discord.js` | Discord REST helpers (also a CLI for the old manual flow) |

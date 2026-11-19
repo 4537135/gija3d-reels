@@ -47,7 +47,10 @@ function build(i) {
   $('img').style.backgroundImage = s.image ? `url("${s.image}")` : 'none';
   $('block').style.top = s.image ? '980px' : '';
   // Per-scene art: SVG/HTML with CSS animations; --d = scene seconds so art can scale its timing.
-  $('art').innerHTML = s.art || ''; $('art').style.setProperty('--d', s.dur + 's');
+  // Shadow DOM keeps the SVG's own <style> (class names, keyframes) from leaking into the page layout.
+  const root = $('art').shadowRoot || $('art').attachShadow({ mode: 'open' });
+  root.innerHTML = s.art ? '<style>:host{display:block} svg{width:100%;height:100%;overflow:visible}</style>' + s.art : '';
+  $('art').style.setProperty('--d', s.dur + 's');
   document.body.classList.toggle('hasart', !!s.art);
   $('count').textContent = s.kind === 'tip' ? String(S.slice(0, i + 1).filter(x => x.kind === 'tip').length).padStart(2, '0') : '';
 }
@@ -68,7 +71,7 @@ window.seek = t => {
   let acc = 0; const spoken = (lt / Math.max(d - 0.25, 0.1)) * chars;
   ws.forEach(w => { const a = acc; acc += w.textContent.length + 1; w.className = spoken >= acc ? 'on' : spoken >= a ? 'on now' : ''; });
   // Drive the art's CSS animations by hand so each frame is exact.
-  $('art').getAnimations({ subtree: true }).forEach(an => { an.pause(); an.currentTime = lt * 1000; });
+  ($('art').shadowRoot || $('art')).getAnimations().forEach(an => { an.pause(); an.currentTime = lt * 1000; });
   $('layers').style.width = (920 * t / total) + 'px'; // progress bar = "layers printed"
 };
 </script></body></html>
