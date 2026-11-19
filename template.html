@@ -16,7 +16,7 @@ body { width:1080px; height:1920px; overflow:hidden; background:var(--bg); color
 #count:empty { display:none; }
 #title { font:800 118px/1.02 Unbounded; text-transform:uppercase; }
 #title .w { display:inline-block; }
-#sub { font:200 52px/1.25 Unbounded; color:var(--muted); }
+#sub { font:200 52px/1.25 Unbounded, Manrope, 'Segoe UI', 'Cambria Math', sans-serif; color:var(--muted); } /* fallbacks carry φ θ ₁ ₂ for formulas */
 #art { position:absolute; left:80px; top:800px; width:920px; height:620px; }
 #art svg { width:100%; height:100%; overflow:visible; }
 body.hasart #block { top:230px; gap:22px; }
@@ -26,36 +26,91 @@ body.hasart #sub { font-size:44px; }
 #cap { position:absolute; left:70px; right:70px; bottom:260px; font:700 54px/1.25 Manrope; text-align:center; }
 #cap span { opacity:.28; } #cap span.on { opacity:1; } #cap span.now { color:var(--accent); }
 #layers { position:absolute; left:80px; bottom:150px; height:10px; background:var(--accent); }
+/* Math format: nothing but the canvas, on pure black. */
+body.math { background:#000; }
+body.math #bed, body.math #img, body.math #brand, body.math #block, body.math #cap, body.math #layers { display:none; }
+body.math #art { left:0; top:0; width:1080px; height:1920px; }
 </style></head><body>
 <div id="bed"></div><div id="img"></div>
 <div id="brand">GIJA<b>3D</b></div>
 <div id="block"><div id="count"></div><div id="title"></div><div id="sub"></div></div><div id="art"></div><div id="cap"></div><div id="layers"></div>
 <script>
-let S = [], starts = [], total = 0, cur = -1;
+let S = [], starts = [], total = 0, cur = -1, LIB = '';
 const $ = id => document.getElementById(id);
 const ease = x => 1 - Math.pow(1 - Math.min(Math.max(x, 0), 1), 3);
-window.load = ({ scenes, brand }) => {
+window.artErrors = []; // [{ scene, error }] from code scenes, read by render.js / artcheck.js
+let MATH = null, CW = 920, CH = 620, CS = 2; // math format: one full-screen 1080x1920 canvas on black
+window.load = ({ scenes, brand, lib, math }) => {
+  MATH = math || null; if (MATH) { CW = 1080; CH = 1920; CS = 1; }
+  document.body.classList.toggle('math', !!MATH);
   for (const [k, v] of Object.entries(brand)) document.documentElement.style.setProperty('--' + k, v);
-  S = scenes; let t = 0; starts = S.map(s => (t += s.dur) - s.dur); total = t;
+  S = scenes; LIB = lib || ''; let t = 0; starts = S.map(s => (t += s.dur) - s.dur); total = t; cur = -1;
   S.forEach(s => { if (s.image) new Image().src = s.image; });
 };
+
+// ---- Code scenes: model-written canvas code runs in a sandboxed iframe (no network, no file access, no parent DOM). ----
+let frame = null, frameReady = null, seq = 0;
+const pending = {};
+addEventListener('message', e => {
+  if (!frame || e.source !== frame.contentWindow) return;
+  if (e.data.ready) frame._ready();
+  else if (pending[e.data.id]) { pending[e.data.id](e.data.err || null); delete pending[e.data.id]; }
+});
+function codeFrame(code) {
+  const f = document.createElement('iframe');
+  f.setAttribute('sandbox', 'allow-scripts');
+  f.style.cssText = `width:${CW}px;height:${CH}px;border:0;display:block;background:transparent`;
+  const setup = JSON.stringify({ w: CW, h: CH, colors: (MATH && MATH.colors) || {} });
+  const safe = JSON.stringify(code).replace(/</g, '\\u003c'); // so a script-closing tag inside scene code can't end the tag
+  f.srcdoc = `<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;800&family=Manrope:wght@400;800&display=block" rel="stylesheet">
+<style>html,body{margin:0;background:transparent;overflow:hidden}canvas{width:${CW}px;height:${CH}px;display:block}</style>
+<canvas id="c" width="${CW * CS}" height="${CH * CS}"></canvas>
+<script>${LIB}<\/script>
+<script>
+P.setup(${setup});
+let draw, err = null;
+try { draw = new Function('ctx', 't', 'd', 'P', 'C', ${safe}); } catch (e) { err = 'syntax error: ' + e.message; }
+const ctx = document.getElementById('c').getContext('2d');
+onmessage = e => {
+  const { t, d, id } = e.data; let er = err;
+  if (!er) {
+    let s = 1; Math.random = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646; // deterministic per frame
+    try { ctx.setTransform(${CS}, 0, 0, ${CS}, 0, 0); ctx.clearRect(0, 0, ${CW}, ${CH}); ctx.globalAlpha = 1; ctx.setLineDash([]); ctx.save(); draw(ctx, t, d, P, P.C); ctx.restore(); }
+    catch (x) { er = String((x && x.message) || x); }
+  }
+  parent.postMessage({ id, err: er }, '*');
+};
+Promise.all([document.fonts.load('200 28px Unbounded'), document.fonts.load('800 28px Unbounded'), document.fonts.load('800 28px Manrope')]).catch(() => {}).then(() => parent.postMessage({ ready: true }, '*'));
+<\/script>`;
+  frameReady = new Promise(res => { f._ready = res; setTimeout(res, 8000); });
+  return f;
+}
+const raf = () => new Promise(r => requestAnimationFrame(r));
+
 function build(i) {
   const s = S[i];
   $('title').innerHTML = (s.title || '').split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ');
   $('sub').textContent = s.sub || '';
   $('cap').innerHTML = s.say.split(/\s+/).map(w => `<span>${w}</span>`).join(' ');
+  // Long captions shrink so they never climb into the illustration above them.
+  let capSize = 54; $('cap').style.fontSize = '';
+  while ($('cap').offsetHeight > 215 && capSize > 36) $('cap').style.fontSize = (capSize -= 2) + 'px';
   $('img').style.backgroundImage = s.image ? `url("${s.image}")` : 'none';
   $('block').style.top = s.image ? '980px' : '';
-  // Per-scene art: SVG/HTML with CSS animations; --d = scene seconds so art can scale its timing.
+  // Per-scene art: either an SVG with CSS animations (--d = scene seconds), or canvas code (math scenes).
   // Shadow DOM keeps the SVG's own <style> (class names, keyframes) from leaking into the page layout.
   const root = $('art').shadowRoot || $('art').attachShadow({ mode: 'open' });
-  root.innerHTML = s.art ? '<style>:host{display:block} svg{width:100%;height:100%;overflow:visible}</style>' + s.art : '';
+  frame = null; frameReady = null;
+  if (s.code) { root.innerHTML = ''; frame = codeFrame(s.code); root.appendChild(frame); }
+  else root.innerHTML = s.art ? '<style>:host{display:block} svg{width:100%;height:100%;overflow:visible}</style>' + s.art : '';
   $('art').style.setProperty('--d', s.dur + 's');
-  document.body.classList.toggle('hasart', !!s.art);
+  document.body.classList.toggle('hasart', !!(s.art || s.code));
   $('count').textContent = s.kind === 'tip' ? String(S.slice(0, i + 1).filter(x => x.kind === 'tip').length).padStart(2, '0') : '';
 }
 // Deterministic: everything is a pure function of t, so every render is identical.
-window.seek = t => {
+window.seek = async t => {
   let i = starts.findIndex((st, k) => t < st + S[k].dur); if (i < 0) i = S.length - 1;
   if (i !== cur) { build(i); cur = i; }
   const lt = t - starts[i], d = S[i].dur;
@@ -73,5 +128,15 @@ window.seek = t => {
   // Drive the art's CSS animations by hand so each frame is exact.
   ($('art').shadowRoot || $('art')).getAnimations().forEach(an => { an.pause(); an.currentTime = lt * 1000; });
   $('layers').style.width = (920 * t / total) + 'px'; // progress bar = "layers printed"
+  if (frame) { // ask the sandbox to draw this exact moment and wait until it has
+    await frameReady;
+    const f = frame, err = await new Promise(res => {
+      const id = ++seq; pending[id] = res;
+      f.contentWindow.postMessage({ t: lt, d, id }, '*');
+      setTimeout(() => { if (pending[id]) { delete pending[id]; res('timed out (infinite loop or very slow code?)'); } }, 5000);
+    });
+    if (err && !window.artErrors.some(e => e.scene === i)) window.artErrors.push({ scene: i, error: err });
+    await raf(); await raf();
+  }
 };
 </script></body></html>

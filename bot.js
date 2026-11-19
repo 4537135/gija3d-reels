@@ -12,6 +12,7 @@ const { download } = require('./download');
 const { transcribe } = require('./transcribe');
 const { writeScript, MODEL } = require('./writer');
 const { FFMPEG, FFPROBE } = require('./tools');
+const { palette } = require('./palette');
 
 const POLL = Number(process.env.POLL_SECONDS || 20) * 1000;
 const OUT = path.join(__dirname, 'out');
@@ -65,12 +66,12 @@ async function makeReel({ dir, url, video, text, note }) {
   } else transcript = text;
 
   log(`  writing script with ${MODEL}`);
-  const { path: scriptPath, script } = await writeScript({ dir, transcript, info, frames, note });
+  const { path: scriptPath, script } = await writeScript({ dir, transcript, info, frames, note, palette: palette(frames) });
   log('  rendering');
   const reel = await renderReel(scriptPath);
 
   fs.mkdirSync(OUT, { recursive: true });
-  const slug = (script.scenes[0].title || 'reel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  const slug = (script.title || script.scenes[0].title || 'reel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   const keep = path.join(OUT, `${new Date().toISOString().slice(0, 10)}_${path.basename(dir)}_${slug}.mp4`);
   fs.copyFileSync(reel, keep);
   fs.writeFileSync(keep.replace(/\.mp4$/, '.txt'), script.caption + '\n');

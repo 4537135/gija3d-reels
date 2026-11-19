@@ -13,6 +13,16 @@ You can also upload a video file, paste several links in one message (one reel e
 Any other text in the message is passed to Claude as instructions, e.g.
 `https://www.tiktok.com/@x/video/123  make it about PETG, keep it under 25s`.
 
+## Two formats (picked automatically from the source)
+
+- **Talk**: narrated tips. Hook, 2-5 numbered scenes, call to action; Fish Audio voice, captions, an animated
+  illustration per scene (SVG, or exact graphs drawn by code).
+- **Math**: for mathematical / mechanism visualisations. One continuous full-screen animation on pure black, drawn by
+  code from the real formulas, in colours sampled from the source video. No voice and no captions: a generated
+  ambient pad plays instead (set `AMBIENT_AUDIO=<file>` in `.env` to use your own track). Uses no Fish credit for voice.
+
+Add "math format" or "talk format" to your Discord message to force one.
+
 ## Setup (Windows)
 
 1. Install [Node.js 20.6+](https://nodejs.org).
@@ -70,6 +80,9 @@ If TikTok/IG downloads start failing for everyone, update yt-dlp: `npm update yo
 | `download.js` | yt-dlp wrapper (TikTok, Instagram, Shorts, …) |
 | `transcribe.js` | Fish Audio speech-to-text |
 | `writer.js` | Claude prompt (run via `claude -p`): rewritten script + animated SVG per scene |
-| `render.js` | Fish TTS + frame-by-frame Playwright render → `reel.mp4` |
+| `render.js` | Fish TTS (or ambient audio) + frame-by-frame Playwright render → `reel.mp4` |
+| `plotlib.js` | graphing helpers available to the drawing code (axes, exact curves, polar, formulas) |
+| `artcheck.js` | dry-runs generated drawing code so errors get fixed before rendering |
+| `palette.js` | samples the source video's colours |
 | `template.html` | the visual design of the reel |
 | `discord.js` | Discord REST helpers (also a CLI for the old manual flow) |
