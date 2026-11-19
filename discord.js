@@ -38,6 +38,20 @@ async function listNew({ retryBusy = false } = {}) {
   return msgs.filter(m => m.author.id !== id && !m.author.bot && !marked(m)).reverse();
 }
 
+// If m is a reply to a reel the bot posted (or to the original request), return that request's message id (= job folder).
+// Follows the reply chain upwards (reel -> feedback -> "Version 2" -> ...) until isJob(id) says a job folder exists.
+// Returns null if m is not a reply, or the id it was replying to when no job is found.
+async function jobOf(m, isJob = () => true) {
+  let id = m.message_reference && m.message_reference.message_id, msg = m.referenced_message;
+  const first = id;
+  for (let hop = 0; id && hop < 8; hop++) {
+    if (isJob(id)) return id;
+    msg = msg && msg.id === id ? msg : await api(`/channels/${CH}/messages/${id}`).catch(() => null);
+    id = msg && msg.message_reference && msg.message_reference.message_id; msg = null;
+  }
+  return first || null;
+}
+
 const LINK_RE = /https?:\/\/[^\s<>]+/g;
 const linksIn = text => (text.match(LINK_RE) || []).map(u => u.replace(/[)>.,]+$/, ''));
 
@@ -66,7 +80,7 @@ async function reply(id, text, file, mark = E.done) {
   if (mark) await react(id, mark);
 }
 
-module.exports = { listNew, linksIn, saveAttachments, react, unreact, reply, E, MAX_UPLOAD_MB };
+module.exports = { listNew, jobOf, linksIn, saveAttachments, react, unreact, reply, E, MAX_UPLOAD_MB };
 
 // ---- CLI (manual mode, kept for compatibility) ----
 async function pull() {

@@ -7,11 +7,11 @@ function palette(frames, max = 5) {
   const bins = new Map(); let total = 0;
   for (const f of frames) {
     let buf;
-    try { buf = execFileSync(FFMPEG, ['-v', 'error', '-i', f, '-vf', 'scale=96:-2', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 24 }); } catch { continue; }
+    try { buf = execFileSync(FFMPEG, ['-v', 'error', '-i', f, '-vf', 'scale=360:-2:flags=neighbor', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 26 }); } catch { continue; }
     for (let i = 0; i + 2 < buf.length; i += 3) {
       const r = buf[i], g = buf[i + 1], b = buf[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
       total++;
-      if (mx < 70 || mx - mn < 45) continue; // skip black/dark and greys/white: we want the accent colours
+      if (mx < 130 || (mx - mn) / mx < 0.4) continue; // only bright, saturated pixels: the accent colours, not black, grey or blurry edges
       const k = (r >> 4) << 8 | (g >> 4) << 4 | (b >> 4);
       const e = bins.get(k) || [0, 0, 0, 0]; e[0]++; e[1] += r; e[2] += g; e[3] += b; bins.set(k, e);
     }
@@ -19,7 +19,7 @@ function palette(frames, max = 5) {
   const cols = [...bins.values()].sort((a, b) => b[0] - a[0]).map(([n, r, g, b]) => ({ n, r: r / n, g: g / n, b: b / n }));
   const out = [];
   for (const c of cols) {
-    if (c.n < total * 0.002) break;
+    if (c.n < total * 0.0003) break; // thin line art covers very few pixels
     if (out.some(o => Math.hypot(o.r - c.r, o.g - c.g, o.b - c.b) < 70)) continue; // too close to one we have
     out.push(c); if (out.length >= max) break;
   }

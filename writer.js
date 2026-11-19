@@ -187,7 +187,7 @@ function askClaude(dir, prompt) {
   });
 }
 
-async function writeScript({ dir, transcript, info = {}, frames = [], note = '', palette = [] }) {
+async function writeScript({ dir, transcript, info = {}, frames = [], note = '', palette = [], promptOverride = '' }) {
   const content = [{ type: 'text', text: [
     frames.length ? `First use the Read tool to look at these ${frames.length} frames from the source video, in order: ${frames.map(f => path.basename(f)).join(', ')}.` : 'No frames available.',
     info.platform ? `Platform: ${info.platform}` : '',
@@ -198,7 +198,8 @@ async function writeScript({ dir, transcript, info = {}, frames = [], note = '',
     note ? `Extra instructions from the person who sent this:\n${note}` : '',
     'Write the reel now. Your final reply must be the JSON object only.',
   ].filter(Boolean).join('\n\n') }];
-  const prompt = content[0].text;
+  const prompt = promptOverride || content[0].text;
+  if (!promptOverride) fs.writeFileSync(path.join(dir, 'writer_prompt.txt'), prompt); // kept so a later revision has the source context
 
   let j, lastErr;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -262,4 +263,36 @@ async function writeScript({ dir, transcript, info = {}, frames = [], note = '',
   return { path: out, script };
 }
 
-module.exports = { writeScript, MODEL };
+// Revise a finished reel from the owner's feedback (a Discord reply to the reel). Same folder, same pipeline.
+async function reviseScript({ dir, feedback }) {
+  const old = JSON.parse(fs.readFileSync(path.join(dir, 'script.json'), 'utf8'));
+  const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
+  // Rebuild the JSON Claude originally produced (file names -> contents).
+  const prev = old.format === 'math'
+    ? { format: 'math', caption: old.caption, source_summary: old.source_summary, title: old.title, duration: old.duration, code: read(old.code) }
+    : { format: 'talk', caption: old.caption, source_summary: old.source_summary,
+        scenes: old.scenes.map(s => ({ kind: s.kind, title: s.title, sub: s.sub || '', say: s.say, ...(s.code ? { code: read(s.code) } : s.art ? { art: read(s.art) } : {}) })) };
+  const pf = path.join(dir, 'writer_prompt.txt');
+  const base = fs.existsSync(pf) ? read('writer_prompt.txt').split('Write the reel now.')[0].trim() : `Source summary: ${old.source_summary || '(unknown)'}`;
+  const promptOverride = `${base}
+
+You already made this reel from that source:
+${JSON.stringify(prev)}
+
+` +
+    `The channel owner watched it and wants these changes:
+${feedback}
+
+` +
+    'Apply exactly what they ask and keep everything else as it is (same format unless they ask to switch). ' +
+    'Reply with the complete updated JSON object only.';
+  const c = old.colors || {};
+  const out = await writeScript({ dir, palette: [c.accent, c.second, c.third].filter(Boolean), promptOverride });
+  // Voice files are cached per scene: drop the ones whose line changed so they get re-voiced.
+  const oldSay = (old.scenes || []).map(s => s.say), newSay = (out.script.scenes || []).map(s => s.say);
+  for (let i = 0; i < Math.max(oldSay.length, newSay.length); i++)
+    if (oldSay[i] !== newSay[i]) fs.rmSync(path.join(dir, `vo_${i}_raw.mp3`), { force: true });
+  return out;
+}
+
+module.exports = { writeScript, reviseScript, MODEL };

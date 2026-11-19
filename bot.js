@@ -10,7 +10,7 @@ const fs = require('fs'), path = require('path'), { execFileSync, spawn } = requ
 const discord = require('./discord');
 const { download } = require('./download');
 const { transcribe } = require('./transcribe');
-const { writeScript, MODEL } = require('./writer');
+const { writeScript, reviseScript, MODEL } = require('./writer');
 const { FFMPEG, FFPROBE } = require('./tools');
 const { palette } = require('./palette');
 
@@ -78,7 +78,39 @@ async function makeReel({ dir, url, video, text, note }) {
   return { reel, keep, script };
 }
 
+// A Discord reply to a reel = "fix this": revise that reel's script from the feedback and post a new version.
+async function revise(m, jobId) {
+  const id = m.id, dir = path.join(__dirname, 'jobs', jobId);
+  log(`revise ${jobId}: ${JSON.stringify(m.content).slice(0, 120)}`);
+  await discord.react(id, discord.E.busy).catch(() => {});
+  try {
+    const { path: scriptPath, script } = await reviseScript({ dir, feedback: m.content });
+    log('  rendering');
+    const reel = await renderReel(scriptPath);
+    fs.mkdirSync(OUT, { recursive: true });
+    const n = fs.readdirSync(OUT).filter(f => f.includes(`_${jobId}_`) && f.endsWith('.mp4')).length + 1;
+    const slug = (script.title || script.scenes[0].title || 'reel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+    const keep = path.join(OUT, `${new Date().toISOString().slice(0, 10)}_${jobId}_${slug}_v${n}.mp4`);
+    fs.copyFileSync(reel, keep);
+    fs.writeFileSync(keep.slice(0, -4) + '.txt', script.caption + '\n');
+    await discord.reply(id, `**Version ${n}**
+${script.caption}`, fitForDiscord(reel));
+    log(`  done -> ${keep}`);
+  } catch (e) {
+    log(`  REVISE FAILED: ${e.stack || e.message}`);
+    await discord.reply(id, `Could not revise that reel: ${e.message.slice(0, 300)}`, null, discord.E.fail).catch(() => {});
+  }
+  await discord.unreact(id, discord.E.busy);
+}
+
 async function handle(m) {
+  const jobId = await discord.jobOf(m, x => fs.existsSync(path.join(__dirname, 'jobs', x, 'script.json'))).catch(() => null);
+  if (jobId && !discord.linksIn(m.content).length && !m.attachments.length) {
+    if (fs.existsSync(path.join(__dirname, 'jobs', jobId, 'script.json'))) return revise(m, jobId);
+    await discord.react(m.id, discord.E.busy).catch(() => {});
+    await discord.reply(m.id, 'I can only revise a reel I made: reply to the reel video (or to your original link) with what to change.', null, discord.E.fail);
+    return discord.unreact(m.id, discord.E.busy);
+  }
   const id = m.id, base = path.join(__dirname, 'jobs', id);
   log(`job ${id}: ${JSON.stringify(m.content).slice(0, 120)}`);
   await discord.react(id, discord.E.busy).catch(() => {});

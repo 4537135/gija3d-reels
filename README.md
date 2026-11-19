@@ -86,3 +86,9 @@ If TikTok/IG downloads start failing for everyone, update yt-dlp: `npm update yo
 | `palette.js` | samples the source video's colours |
 | `template.html` | the visual design of the reel |
 | `discord.js` | Discord REST helpers (also a CLI for the old manual flow) |
+
+## Fixing a reel
+
+Reply in Discord to the reel the bot posted (or to your original link) and say what to change, e.g.
+"make the title FIBONACCI GEARS, slow it down, 12 seconds". The bot revises that reel's script, re-renders and
+replies with **Version 2**. Reply to Version 2 for a Version 3, and so on. Only changed voice lines are re-voiced.
