@@ -2,7 +2,9 @@
 // Reads a scene script, voices each scene with Fish Audio, renders 1080x1920 frames
 // with Playwright, muxes with ffmpeg -> jobs/<name>/reel.mp4
 const fs = require('fs'), path = require('path'), { execFileSync, spawn } = require('child_process');
+const { pathToFileURL } = require('url');
 const { chromium } = require('playwright');
+const { FFMPEG, FFPROBE } = require('./tools');
 
 const FPS = 30, W = 1080, H = 1920, GAP = 0.25; // GAP = silence between scenes (s)
 const scriptPath = process.argv[2];
@@ -12,7 +14,8 @@ const dir = path.dirname(path.resolve(scriptPath));
 const job = JSON.parse(fs.readFileSync(scriptPath, 'utf8'));
 if (!Array.isArray(job.scenes) || !job.scenes.length) throw new Error('script.json needs scenes[]');
 
-const dur = f => parseFloat(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
+const fwd = p => p.replace(/\\/g, '/'); // ffmpeg concat lists want forward slashes on Windows
+const dur = f => parseFloat(execFileSync(FFPROBE, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
 
 async function tts(text, out) {
   // Key is injected by the session proxy for api.fish.audio; FISH_API_KEY is only needed when run locally.
@@ -30,27 +33,27 @@ async function tts(text, out) {
   const parts = [];
   for (const [i, s] of job.scenes.entries()) {
     const f = path.join(dir, `vo_${i}.mp3`);
-    if (noTts) execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', String(Math.max(1.5, s.say.split(/\s+/).length / 2.6)), f]);
+    if (noTts) execFileSync(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', String(Math.max(1.5, s.say.split(/\s+/).length / 2.6)), f]);
     else {
       const raw = path.join(dir, `vo_${i}_raw.mp3`);
       if (!fs.existsSync(raw) || job.retts) await tts(s.say, raw);
-      execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-af', `atempo=${job.speed || 1.15}`, f]); // 15% faster by default
+      execFileSync(FFMPEG, ['-y', '-v', 'error', '-i', raw, '-af', `atempo=${job.speed || 1.15}`, f]); // 15% faster by default
     }
     s.dur = dur(f) + GAP;
     parts.push(f);
   }
   const total = job.scenes.reduce((a, s) => a + s.dur, 0);
   const concat = path.join(dir, 'vo_list.txt'), gap = path.join(dir, 'gap.mp3');
-  execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', String(GAP), gap]);
-  fs.writeFileSync(concat, parts.map(p => `file '${p}'\nfile '${gap}'`).join('\n'));
+  execFileSync(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', String(GAP), gap]);
+  fs.writeFileSync(concat, parts.map(p => `file '${fwd(p)}'\nfile '${fwd(gap)}'`).join('\n'));
   const voice = path.join(dir, 'voice.m4a');
-  execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', concat, '-ar', '44100', '-ac', '1', '-c:a', 'aac', '-b:a', '160k', voice]);
+  execFileSync(FFMPEG, ['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', concat, '-ar', '44100', '-ac', '1', '-c:a', 'aac', '-b:a', '160k', voice]);
 
   // 2. Frames: template.html exposes seek(t); we screenshot every frame and pipe to ffmpeg.
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: W, height: H } });
-  await page.goto('file://' + path.join(__dirname, 'template.html'));
-  const scenes = job.scenes.map(s => ({ ...s, image: s.image ? 'file://' + path.resolve(dir, s.image) : null,
+  await page.goto(pathToFileURL(path.join(__dirname, 'template.html')).href);
+  const scenes = job.scenes.map(s => ({ ...s, image: s.image ? pathToFileURL(path.resolve(dir, s.image)).href : null,
     art: s.art ? fs.readFileSync(path.resolve(dir, s.art), 'utf8') : null }));
   await page.evaluate(d => window.load(d), { scenes, brand: job.brand || {} });
   await page.evaluate(() => document.fonts.ready);
@@ -58,7 +61,7 @@ async function tts(text, out) {
   if (!fontsOk) throw new Error('Brand fonts did not load (check fonts.googleapis.com access)');
 
   const out = path.join(dir, 'reel.mp4');
-  const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', '-i', voice,
+  const ff = spawn(FFMPEG, ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', '-i', voice,
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', out],
     { stdio: ['pipe', 'inherit', 'inherit'] });
   const n = Math.ceil(total * FPS);

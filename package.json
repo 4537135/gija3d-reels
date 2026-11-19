@@ -1,0 +1,20 @@
+{
+  "name": "gija3d-reels",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Discord bot: paste a TikTok/Instagram link, get back a rewritten faceless reel (Claude + Fish Audio).",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node --env-file=.env bot.js",
+    "once": "node --env-file=.env bot.js --once",
+    "postinstall": "playwright install chromium"
+  },
+  "engines": { "node": ">=20.6" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
+    "playwright": "^1.65.1",
+    "youtube-dl-exec": "^3.1.19"
+  }
+}

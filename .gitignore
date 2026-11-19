@@ -3,3 +3,5 @@ jobs/*
 jobs/example/*
 !jobs/example/script.json
 .env
+node_modules/
+out/
