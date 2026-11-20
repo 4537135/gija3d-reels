@@ -92,3 +92,10 @@ If TikTok/IG downloads start failing for everyone, update yt-dlp: `npm update yo
 Reply in Discord to the reel the bot posted (or to your original link) and say what to change, e.g.
 "make the title FIBONACCI GEARS, slow it down, 12 seconds". The bot revises that reel's script, re-renders and
 replies with **Version 2**. Reply to Version 2 for a Version 3, and so on. Only changed voice lines are re-voiced.
+
+## 3D graphics
+
+Scenes can be real 3D (three.js, lit solids, camera moves) instead of flat drawings. Claude picks 3D for spatial topics
+(solid parts, engines, surfaces, knots) and always when your message asks for 3D, three.js or Blender
+(Blender itself is too slow to run per reel; three.js is used instead). 3D renders a little slower.
+`npm install` builds the bundled three.js automatically (`npm run build:three` to rebuild it).

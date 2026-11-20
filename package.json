@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node --env-file=.env bot.js",
     "once": "node --env-file=.env bot.js --once",
-    "postinstall": "playwright install chromium"
+    "postinstall": "playwright install chromium && npm run build:three",
+    "build:three": "esbuild vendor/three-entry.mjs --bundle --format=iife --global-name=THREE --minify --log-level=warning --outfile=vendor/three.iife.js"
   },
   "engines": {
     "node": ">=20.6"
@@ -16,6 +17,10 @@
     "ffmpeg-static": "^5.2.0",
     "ffprobe-static": "^3.1.0",
     "playwright": "^1.65.1",
+    "three": "^0.187.0",
     "youtube-dl-exec": "^3.1.19"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

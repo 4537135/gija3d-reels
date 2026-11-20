@@ -5,3 +5,4 @@ jobs/example/*
 .env
 node_modules/
 out/
+vendor/three.iife.js

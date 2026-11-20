@@ -14,8 +14,8 @@ async function checkCode(scenes, { shotDir, math } = {}) { // math: { colors } =
     await page.goto(pathToFileURL(path.join(__dirname, 'template.html')).href);
     const lib = fs.readFileSync(path.join(__dirname, 'plotlib.js'), 'utf8');
     await page.evaluate(d => window.load(d), {
-      scenes: scenes.map(s => ({ kind: s.kind || 'tip', title: s.title || '', say: s.say || 'x', dur: D, code: s.code || null, art: null })),
-      brand: {}, lib, math: math || null,
+      scenes: scenes.map(s => ({ kind: s.kind || 'tip', title: s.title || '', say: s.say || 'x', dur: D, code: s.code || null, engine: s.engine || null, art: null })),
+      brand: {}, lib, math: math || null, three: scenes.some(s => s.engine === 'three') ? require('./threelib').threeLib() : '',
     });
     for (const [i, s] of scenes.entries()) {
       if (!s.code) continue;

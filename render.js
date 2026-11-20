@@ -14,7 +14,7 @@ const dir = path.dirname(path.resolve(scriptPath));
 const job = JSON.parse(fs.readFileSync(scriptPath, 'utf8'));
 // Math format: one full-screen silent animation (script.json: { format:'math', duration, code, colors }) with ambient audio.
 const MATH = job.format === 'math';
-if (MATH) job.scenes = [{ kind: 'math', title: '', say: '', code: job.code }];
+if (MATH) job.scenes = [{ kind: 'math', title: '', say: '', code: job.code, engine: job.engine }];
 if (!Array.isArray(job.scenes) || !job.scenes.length) throw new Error('script.json needs scenes[]');
 
 const fwd = p => p.replace(/\\/g, '/'); // ffmpeg concat lists want forward slashes on Windows
@@ -75,7 +75,8 @@ function ambient(out, D) {
     art: s.art ? fs.readFileSync(path.resolve(dir, s.art), 'utf8') : null,
     code: s.code ? fs.readFileSync(path.resolve(dir, s.code), 'utf8') : null })); // code = canvas JS for math scenes
   const lib = fs.readFileSync(path.join(__dirname, 'plotlib.js'), 'utf8');
-  await page.evaluate(d => window.load(d), { scenes, brand: job.brand || {}, lib, math: MATH ? { colors: job.colors || {} } : null });
+  const three = job.scenes.some(s => s.engine === 'three') ? require('./threelib').threeLib() : '';
+  await page.evaluate(d => window.load(d), { scenes, brand: job.brand || {}, lib, three, math: MATH ? { colors: job.colors || {} } : null });
   await page.evaluate(() => document.fonts.ready);
   const fontsOk = await page.evaluate(() => document.fonts.check('800 40px Unbounded') && document.fonts.check('400 40px Manrope'));
   if (!fontsOk) throw new Error('Brand fonts did not load (check fonts.googleapis.com access)');

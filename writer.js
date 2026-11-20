@@ -102,6 +102,34 @@ TALK FORMAT visuals. Every scene has exactly ONE visual: either "code" (canvas d
   const x = P.lerp(-6, 6, P.prog(t, d * 0.45, d - 0.3));
   if (t > d * 0.45) g.dot(x, Math.sin(x), { label: 'sin x = ' + Math.sin(x).toFixed(2) });
 
+3D ("engine": "three" next to "code"). Real-time three.js (r187, global THREE, WebGL) for anything that is
+truly spatial: solid objects and printed parts, surfaces z = f(x, y), 3D curves and knots, polyhedra, rotations in
+space, layer-by-layer builds. ALWAYS use it when the sender asks for 3D, three.js, Blender or "nicer graphics"
+(Blender itself is not available; three.js is the substitute). Keep flat graphs and 2D mechanisms in the 2D canvas.
+- With engine "three", "code" is the BODY of setup(THREE, P, C, W, H) and must END with
+  return { scene, camera, update(t, d, ctx) { ... } }
+  setup runs once: build geometry, materials, lights and camera there (W x H is the canvas size in pixels).
+  update runs every frame: set every moving value from t ABSOLUTELY (rotation.y = P.TAU * t / d, positions from formulas,
+  geometry.setDrawRange to build something up); never accumulate (no += per frame). The renderer draws after update.
+  ctx is a transparent 2D canvas ON TOP of the 3D view, already cleared: draw titles, labels, formulas there with
+  P.text / P.row / P.frac exactly as in 2D code.
+- Looks: MeshStandardMaterial / MeshPhysicalMaterial with new THREE.Color(C.accent) etc., metalness 0.1-0.4, roughness
+  0.3-0.6; one AmbientLight (~0.35) + a key DirectionalLight (~2) + a coloured rim light from behind. Smooth geometry
+  (enough segments). Background stays transparent: never set scene.background, never add a floor that fills the frame.
+- Camera: PerspectiveCamera(35-45, W / H, 0.1, 100); frame the object so it fills about 70% of the width and stays
+  clear of the text areas; slow orbits or turntable rotation read best. Extra geometry helpers: THREE.TubeGeometry along a
+  THREE.CatmullRomCurve3 or a custom THREE.Curve, THREE.ParametricGeometry is NOT available (build a BufferGeometry
+  from a grid of points instead), THREE.ExtrudeGeometry from a THREE.Shape, THREE.LatheGeometry for turned parts.
+- Example (scene body, 3D):
+  const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 100); camera.position.set(0, 1.5, 9);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+  const key = new THREE.DirectionalLight(0xffffff, 2); key.position.set(3, 4, 5); scene.add(key);
+  const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(1.2, 0.35, 300, 40, 2, 3),
+    new THREE.MeshStandardMaterial({ color: new THREE.Color(C.accent), metalness: 0.25, roughness: 0.35 }));
+  scene.add(knot); camera.lookAt(0, 0, 0);
+  return { scene, camera, update(t, d, ctx) { knot.rotation.y = P.TAU * t / d; P.text(ctx, W / 2, 80, 'p = 2, q = 3', { size: 34, align: 'center' }); } };
+- 3D renders slower: use it for the scenes that need it, not for icons or text-only scenes.
+
 "art" rules (the field is a complete SVG string):
 - <svg viewBox="0 0 920 620" xmlns="http://www.w3.org/2000/svg"> with a <style> inside holding CSS @keyframes animations.
 - The renderer seeks animations frame-by-frame, so use only CSS animations (no <script>, no SMIL, no external images/fonts/links).
@@ -116,11 +144,15 @@ Style references from an existing reel (ironing tip):
 ${artExamples}
 
 Output format: reply with ONE JSON object and nothing else (no markdown fences).
-Math format: {"format":"math","caption": string,"source_summary": string,"title": string,"duration": number,"code": string}
+Math format: {"format":"math","caption": string,"source_summary": string,"title": string,"duration": number,"code": string,
+              "engine": "canvas" | "three"}
 Talk format:
 {"format":"talk","caption": string, "source_summary": string (1 sentence: what the original was about),
  "scenes": [{"kind": "hook"|"tip"|"cta", "title": string, "sub": string (may be ""), "say": string,
-             "code": string (JS function body)  OR  "art": string (SVG)}]}
+             "code": string (JS function body), "engine": "canvas" | "three"   OR  "art": string (SVG)}]}
+"engine" defaults to "canvas" (the 2D draw function); "three" means the 3D setup function described above.
+In math format with engine "three", the 3D view is the full 1080 x 1920 frame on black and ctx is the overlay for the
+title / formula / live values; all the math-format layout rules still apply.
 
 For reference, a finished script.json (art omitted) looks like:
 ${example}`;
@@ -137,6 +169,8 @@ function validate(j) {
     if (typeof j.code !== 'string' || j.code.trim().length < 40) throw new Error('math format needs "code"');
     if (!j.caption) throw new Error('missing caption');
     j.duration = Math.min(30, Math.max(6, Number(j.duration) || 12));
+    j.engine = j.engine === 'three' ? 'three' : 'canvas';
+    if (j.engine === 'three' && !/return\s*\{/.test(j.code)) throw new Error('3D code must end with return { scene, camera, update }');
     return;
   }
   if (!j || !Array.isArray(j.scenes)) throw new Error('missing scenes[]');
@@ -150,6 +184,7 @@ function validate(j) {
     const hasArt = typeof x.art === 'string' && /<svg[\s>]/i.test(x.art);
     if (!hasCode && !hasArt) throw new Error(`scene ${i}: needs "code" (canvas JS) or "art" (SVG)`);
     if (hasCode) delete x.art; else delete x.code;
+    x.engine = hasCode && x.engine === 'three' ? 'three' : undefined;
   }
   if (!j.caption) throw new Error('missing caption');
 }
@@ -214,7 +249,7 @@ async function writeScript({ dir, transcript, info = {}, frames = [], note = '',
   if (j.format === 'math') {
     // The whole reel is one program, so it gets two repair rounds and then fails loudly.
     for (let round = 0; ; round++) {
-      const errs = await checkCode([{ code: j.code }], { math: { colors }, shotDir: path.resolve(dir) }).catch(e => { console.log(`  code check skipped: ${e.message}`); return []; });
+      const errs = await checkCode([{ code: j.code, engine: j.engine }], { math: { colors }, shotDir: path.resolve(dir) }).catch(e => { console.log(`  code check skipped: ${e.message}`); return []; });
       if (!errs.length) break;
       console.log(`  drawing code error: ${errs[0].error}`);
       if (round >= 2) throw new Error(`the animation code kept failing: ${errs[0].error}`);
@@ -226,7 +261,7 @@ async function writeScript({ dir, transcript, info = {}, frames = [], note = '',
     }
     j.caption = j.caption.replace(/[ \t]*#gija3d\b/gi, '');
     fs.writeFileSync(path.join(dir, 'code.js'), j.code);
-    const script = { format: 'math', caption: j.caption, source_summary: j.source_summary || '', title: j.title || 'reel', duration: j.duration, colors, code: 'code.js' };
+    const script = { format: 'math', caption: j.caption, source_summary: j.source_summary || '', title: j.title || 'reel', duration: j.duration, colors, code: 'code.js', engine: j.engine };
     const out = path.join(dir, 'script.json');
     fs.writeFileSync(out, JSON.stringify(script, null, 2));
     return { path: out, script };
@@ -254,7 +289,7 @@ async function writeScript({ dir, transcript, info = {}, frames = [], note = '',
   const script = { voice, caption: j.caption, source_summary: j.source_summary || '', scenes: [] };
   j.scenes.forEach((s, i) => {
     const visual = {};
-    if (s.code) { visual.code = `code${i}.js`; fs.writeFileSync(path.join(dir, visual.code), s.code); }
+    if (s.code) { visual.code = `code${i}.js`; fs.writeFileSync(path.join(dir, visual.code), s.code); if (s.engine === 'three') visual.engine = 'three'; }
     else if (s.art) { visual.art = `art${i}.svg`; fs.writeFileSync(path.join(dir, visual.art), cleanSvg(s.art)); }
     script.scenes.push({ kind: s.kind, title: s.title, ...(s.sub ? { sub: s.sub } : {}), say: s.say, ...visual });
   });
@@ -269,9 +304,9 @@ async function reviseScript({ dir, feedback }) {
   const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
   // Rebuild the JSON Claude originally produced (file names -> contents).
   const prev = old.format === 'math'
-    ? { format: 'math', caption: old.caption, source_summary: old.source_summary, title: old.title, duration: old.duration, code: read(old.code) }
+    ? { format: 'math', caption: old.caption, source_summary: old.source_summary, title: old.title, duration: old.duration, code: read(old.code), engine: old.engine || 'canvas' }
     : { format: 'talk', caption: old.caption, source_summary: old.source_summary,
-        scenes: old.scenes.map(s => ({ kind: s.kind, title: s.title, sub: s.sub || '', say: s.say, ...(s.code ? { code: read(s.code) } : s.art ? { art: read(s.art) } : {}) })) };
+        scenes: old.scenes.map(s => ({ kind: s.kind, title: s.title, sub: s.sub || '', say: s.say, ...(s.code ? { code: read(s.code), engine: s.engine || 'canvas' } : s.art ? { art: read(s.art) } : {}) })) };
   const pf = path.join(dir, 'writer_prompt.txt');
   const base = fs.existsSync(pf) ? read('writer_prompt.txt').split('Write the reel now.')[0].trim() : `Source summary: ${old.source_summary || '(unknown)'}`;
   const promptOverride = `${base}
